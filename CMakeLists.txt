@@ -14,6 +14,7 @@ set(SOURCES
     src/file.c
     src/column.c
     src/row.c
+    src/test.c
 )
 
 # Add an executable
