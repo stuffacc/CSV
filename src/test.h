@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #include "column.h"
 #include "file.h"
 #include "row.h"
