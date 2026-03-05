@@ -1,6 +1,7 @@
 #include "test.h"
 
-int runTests() {
+int runTests()
+{
     int testNum = 1;
 
     char fileNameIn[128];
@@ -9,7 +10,6 @@ int runTests() {
     sprintf(fileNameIn, "%s%d%s", "../data/test/test", testNum, ".csv");
 
     FILE* in = fopen(fileNameIn, "r");
-
 
     while (in != NULL) {
         printf("Run test %d\n", testNum);
@@ -21,13 +21,13 @@ int runTests() {
             fclose(in);
             return -1;
         }
-        
+
         int testRes = testAndClose(in, expectedOut);
         if (testRes != 0) {
             printf("Error in test %d:\nSee 'data/test/test%d.csv', 'data/test/testout%d.txt' and 'data/test/output.txt'\n", testNum, testNum, testNum);
             return -1;
         }
-        
+
         testNum++;
 
         sprintf(fileNameIn, "%s%d%s", "../data/test/test", testNum, ".csv");
@@ -41,7 +41,8 @@ int runTests() {
     return 0;
 }
 
-int testAndClose(FILE* in, FILE* expectedOut) {
+int testAndClose(FILE* in, FILE* expectedOut)
+{
     char readBuffer[1024];
 
     char* header = fileReadLine(in, readBuffer);
@@ -52,10 +53,8 @@ int testAndClose(FILE* in, FILE* expectedOut) {
         return -1;
     }
 
-
     int columnCount = getColumnCount(header);
     int* columnsMaxSize = malloc(sizeof(int) * columnCount);
-
 
     updateMaxSizeColums(header, columnsMaxSize);
 
@@ -69,8 +68,6 @@ int testAndClose(FILE* in, FILE* expectedOut) {
     // move pointer to start
     fseek(in, 0, SEEK_SET);
 
-
-    
     header = fileReadLine(in, readBuffer);
 
     FILE* txt = fopen("../data/test/output.txt", "w");
@@ -78,49 +75,35 @@ int testAndClose(FILE* in, FILE* expectedOut) {
     char writeRowBuffer[1024];
     char writeRowBreakBuffer[1024];
 
-
-
-
-
     Row* row = initRow(columnsMaxSize, columnCount, HEADER);
-    
+
     fillCellsInRow(row, header);
 
     fillWriteRowBreakBuffer(writeRowBreakBuffer, row->type, columnsMaxSize, columnCount);
 
     fillWriteRowBuffer(writeRowBuffer, row, columnsMaxSize, columnCount);
 
-
     fprintf(txt, "%s", writeRowBreakBuffer);
     fprintf(txt, "%s", writeRowBuffer);
     fprintf(txt, "%s", writeRowBreakBuffer);
-
-
-
 
     nextLine = fileReadLine(in, readBuffer);
 
     setRowType(row, DATA);
     fillWriteRowBreakBuffer(writeRowBreakBuffer, row->type, columnsMaxSize, columnCount);
 
-
     while (nextLine != NULL) {
         fillCellsInRow(row, nextLine);
         fillWriteRowBuffer(writeRowBuffer, row, columnsMaxSize, columnCount);
-        
+
         fprintf(txt, "%s", writeRowBuffer);
         fprintf(txt, "%s", writeRowBreakBuffer);
 
-        
         nextLine = fileReadLine(in, readBuffer);
     }
 
-
-
-
     destroyRow(row, columnCount);
     free(columnsMaxSize);
-
 
     fclose(in);
     fclose(txt);
@@ -128,8 +111,8 @@ int testAndClose(FILE* in, FILE* expectedOut) {
     return compareFilesByLinesAndClose(expectedOut);
 }
 
-
-int compareFilesByLinesAndClose(FILE* expectedOut) {
+int compareFilesByLinesAndClose(FILE* expectedOut)
+{
     FILE* out = fopen("../data/test/output.txt", "r");
 
     char outBuff[4096];
@@ -138,14 +121,12 @@ int compareFilesByLinesAndClose(FILE* expectedOut) {
     char* outBuffLine = fileReadLine(out, outBuff);
     char* expectedOutBuffLine = fileReadLine(expectedOut, expectedOutBuff);
 
-
     while (1) {
         if (outBuffLine == NULL || expectedOutBuffLine == NULL) {
-            // TODO: 
+            // TODO:
             fclose(out);
             fclose(expectedOut);
-            
-            
+
             if (outBuffLine != expectedOutBuffLine) {
 
                 return -1;
@@ -160,13 +141,8 @@ int compareFilesByLinesAndClose(FILE* expectedOut) {
             fclose(expectedOut);
             return -1;
         }
-        
+
         outBuffLine = fileReadLine(out, outBuff);
         expectedOutBuffLine = fileReadLine(expectedOut, expectedOutBuff);
     }
-
-
-
 }
-
-

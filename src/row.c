@@ -1,10 +1,9 @@
 #include "row.h"
 
-
-Row* initRow(int columnsMaxSize[], int columnCount, RowType rowType) {
+Row* initRow(int columnsMaxSize[], int columnCount, RowType rowType)
+{
     Row* row = malloc(sizeof(Row));
     row->type = rowType;
-
 
     Cell* cells = initCells(columnsMaxSize, columnCount);
 
@@ -13,13 +12,15 @@ Row* initRow(int columnsMaxSize[], int columnCount, RowType rowType) {
     return row;
 }
 
-Row* setRowType(Row* row, RowType rowType) {
+Row* setRowType(Row* row, RowType rowType)
+{
     row->type = rowType;
 
     return row;
 }
 
-void destroyRow(Row* row, int columnCount) {
+void destroyRow(Row* row, int columnCount)
+{
     Cell* cells = row->cells;
     destroyCells(cells, columnCount);
 
@@ -27,16 +28,13 @@ void destroyRow(Row* row, int columnCount) {
     free(row);
 }
 
-
-
-Cell* initCells(int columnsMaxSize[], int columnCount) {
+Cell* initCells(int columnsMaxSize[], int columnCount)
+{
     Cell* cells = malloc(sizeof(Cell) * columnCount);
-    
-    
-    for (int i = 0; i < columnCount; i++) {
-        Cell* currentCell = cells+i;
-        int currentMaxSize = columnsMaxSize[i];
 
+    for (int i = 0; i < columnCount; i++) {
+        Cell* currentCell = cells + i;
+        int currentMaxSize = columnsMaxSize[i];
 
         char* rowString = malloc(sizeof(char) * (currentMaxSize + 1));
         currentCell->string = rowString;
@@ -45,14 +43,15 @@ Cell* initCells(int columnsMaxSize[], int columnCount) {
     return cells;
 }
 
-
-Cell* setCellType(Cell* cell, CellType cellType) {
+Cell* setCellType(Cell* cell, CellType cellType)
+{
     cell->type = cellType;
 
     return cell;
 }
 
-void destroyCells(Cell* cells, int columnCount) {
+void destroyCells(Cell* cells, int columnCount)
+{
     for (int i = 0; i < columnCount; i++) {
         Cell* currentCell = cells + i;
 
@@ -60,21 +59,15 @@ void destroyCells(Cell* cells, int columnCount) {
     }
 }
 
-
-
-
-
-
-
-
-void fillCellsInRow(Row* row, char* rowString) {
+void fillCellsInRow(Row* row, char* rowString)
+{
     Cell* cells = row->cells;
 
     char currentChar = *rowString;
     char* startRowStr = rowString;
 
     int columnIndex = 0;
-    
+
     int cellIsString = 0;
     int countPoint = 0;
     while (currentChar != '\0') {
@@ -83,7 +76,6 @@ void fillCellsInRow(Row* row, char* rowString) {
 
             Cell* currentCell = cells + columnIndex;
 
-
             if (cellIsString || (countPoint >= 2)) {
                 setCellType(currentCell, STRING);
             }
@@ -91,15 +83,12 @@ void fillCellsInRow(Row* row, char* rowString) {
             else {
                 setCellType(currentCell, NUMBER);
             }
-            
-            
-            currentCell->string = strcpy(currentCell->string, startRowStr);
 
+            currentCell->string = strcpy(currentCell->string, startRowStr);
 
             *rowString = ',';
 
             startRowStr = rowString + 1;
-
 
             cellIsString = 0;
             countPoint = 0;
@@ -111,18 +100,12 @@ void fillCellsInRow(Row* row, char* rowString) {
             countPoint++;
         }
 
-
         else if (!isdigit(currentChar)) {
             cellIsString = 1;
         }
 
-
-
         rowString++;
         currentChar = *rowString;
-        
-
-
     }
 
     Cell* currentCell = cells + columnIndex;
@@ -135,18 +118,12 @@ void fillCellsInRow(Row* row, char* rowString) {
         setCellType(currentCell, NUMBER);
     }
 
-
     currentCell->string = strcpy(currentCell->string, startRowStr);
-
-
-
-
 }
 
-
-void fillWriteRowBuffer(char* writeRowBuffer, Row* row, int columnsMaxSize[], int columnCount) {
+void fillWriteRowBuffer(char* writeRowBuffer, Row* row, int columnsMaxSize[], int columnCount)
+{
     Cell* cells = row->cells;
-
 
     for (int i = 0; i < columnCount; i++) {
         int currentMaxSize = columnsMaxSize[i];
@@ -167,8 +144,6 @@ void fillWriteRowBuffer(char* writeRowBuffer, Row* row, int columnsMaxSize[], in
             shift = sprintf(writeRowBuffer, "%-*s", currentMaxSize, currentCell->string);
         }
 
-
-
         writeRowBuffer += shift;
         *writeRowBuffer = ' ';
         writeRowBuffer++;
@@ -181,14 +156,12 @@ void fillWriteRowBuffer(char* writeRowBuffer, Row* row, int columnsMaxSize[], in
     *writeRowBuffer = '\0';
 }
 
-
-
-void fillWriteRowBreakBuffer(char* writeRowBreakBuffer, RowType rowType, int columnsMaxSize[], int columnCount) {
+void fillWriteRowBreakBuffer(char* writeRowBreakBuffer, RowType rowType, int columnsMaxSize[], int columnCount)
+{
     *writeRowBreakBuffer = '+';
     writeRowBreakBuffer++;
 
     char fillChar = (rowType == HEADER) ? '=' : '-';
-
 
     for (int i = 0; i < columnCount; i++) {
         int charCounter = 0;
