@@ -1,10 +1,10 @@
-#include "file.h"
-#include "row.h"
-#include "test.h"
-
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "file.h"
+#include "row.h"
+#include "test.h"
 
 int getColumnCountFromFile(char* readBuffer, FILE* csv);
 void countMaxSizeColumnsFromFile(FILE* csv, int* columnsMaxSize, char* readBuffer);
