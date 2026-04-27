@@ -42,7 +42,7 @@ void destroyRow(Row* row, int columnCount)
     free(row);
 }
 
-Cell* initCells(int columnsMaxSize[], int columnCount)
+Cell* initCells(const int columnsMaxSize[], int columnCount)
 {
     Cell* cells = malloc(sizeof(Cell) * columnCount);
     if (cells == NULL) {
@@ -138,7 +138,7 @@ void fillCellsInRow(Row* row, char* rowString)
     currentCell->string = strcpy(currentCell->string, startRowStr);
 }
 
-void fillWriteRowBuffer(char* writeRowBuffer, Row* row, int columnsMaxSize[], int columnCount)
+void fillWriteRowBuffer(char* writeRowBuffer, Row* row, const int columnsMaxSize[], int columnCount)
 {
     Cell* cells = row->cells;
 
@@ -173,7 +173,7 @@ void fillWriteRowBuffer(char* writeRowBuffer, Row* row, int columnsMaxSize[], in
     *writeRowBuffer = '\0';
 }
 
-void fillWriteRowBreakBuffer(char* writeRowBreakBuffer, RowType rowType, int columnsMaxSize[], int columnCount)
+void fillWriteRowBreakBuffer(char* writeRowBreakBuffer, RowType rowType, const int columnsMaxSize[], int columnCount)
 {
     *writeRowBreakBuffer = '+';
     writeRowBreakBuffer++;

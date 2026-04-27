@@ -146,4 +146,9 @@ int compareFiles(FILE* actual, FILE* excepted)
         outBuffLine = fileReadLine(actual, readBufferActual);
         expectedOutBuffLine = fileReadLine(excepted, expectedOutBuffLine);
     }
+
+    fclose(actual);
+    fclose(excepted);
+
+    return SUCCESS;
 }

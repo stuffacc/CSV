@@ -28,7 +28,7 @@ Row* setRowType(Row* row, RowType rowType);
 void destroyRow(Row* row, int columnCount);
 
 // создать ячейки (максимальный размер столбцов, количество столбцов)
-Cell* initCells(int columnsMaxSize[], int columnCount);
+Cell* initCells(const int columnsMaxSize[], int columnCount);
 // установить тип ячейки
 Cell* setCellType(Cell* cell, CellType cellType);
 // разрушить ячейки
@@ -37,6 +37,6 @@ void destroyCells(Cell* cells, int columnCount);
 // заполнить ячейки в строку (Row) из сырой строки (char*)
 void fillCellsInRow(Row* row, char* rowString);
 // заполнить буффер для записи разделения между строками (Row)
-void fillWriteRowBreakBuffer(char* writeRowBreakBuffer, RowType rowType, int columnsMaxSize[], int columnCount);
+void fillWriteRowBreakBuffer(char* writeRowBreakBuffer, RowType rowType, const int columnsMaxSize[], int columnCount);
 // заполнить буффер для записи данных из строки (Row) в файл
-void fillWriteRowBuffer(char* writeRowBuffer, Row* row, int columnsMaxSize[], int columnCount);
+void fillWriteRowBuffer(char* writeRowBuffer, Row* row, int columnsMaxSize[], const int columnCount);
