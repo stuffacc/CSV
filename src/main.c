@@ -7,38 +7,24 @@
 #include "row.h"
 #include "test.h"
 
-int main(int argc, char* argv[])
+#define CANNOT_OPEN_FILE -1
+#define FILE_IS_EMPTY -2
+#define ALLOCATE_ERROR -3
+
+int getColumnCountFromFile(char* readBuffer, FILE* csv)
 {
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--test") == 0) {
-            int res = runTests();
-            if (res == 0) {
-                printf("All tests passed\n");
-            }
-            return res;
-        }
-    }
-
-    char readBuffer[4096];
-
-    FILE* csv = fopen("../data/input.csv", "r");
-
-    if (csv == NULL) {
-        printf("Не удалось открыть файл\n");
-        return -1;
-    }
-
     char* header = fileReadLine(csv, readBuffer);
 
     if (header == NULL) {
-        printf("Файл пустой\n");
-        return -2;
+        return FILE_IS_EMPTY;
     }
 
-    int columnCount = getColumnCount(header);
-    int* columnsMaxSize = malloc(sizeof(int) * columnCount);
+    return getColumnCount(header);
+}
 
-    updateMaxSizeColums(header, columnsMaxSize);
+void countMaxSizeColumnsFromFile(FILE* csv, int* columnsMaxSize, char* readBuffer)
+{
+    updateMaxSizeColums(readBuffer, columnsMaxSize);
 
     char* nextLine = fileReadLine(csv, readBuffer);
     while (nextLine != NULL) {
@@ -46,19 +32,11 @@ int main(int argc, char* argv[])
 
         nextLine = fileReadLine(csv, readBuffer);
     }
+}
 
-    // move pointer to start
-    fseek(csv, 0, SEEK_SET);
-
-    header = fileReadLine(csv, readBuffer);
-
-    FILE* txt = fopen("../data/output.txt", "w");
-
-    char writeRowBuffer[4096];
-    char writeRowBreakBuffer[4096];
-
-    Row* row = initRow(columnsMaxSize, columnCount, HEADER);
-
+void prettyWriteInFile(FILE* csv, FILE* txt, char* readBuffer, Row* row, int* columnsMaxSize, int columnCount, char* writeRowBuffer, char* writeRowBreakBuffer)
+{
+    char* header = fileReadLine(csv, readBuffer);
     fillCellsInRow(row, header);
 
     fillWriteRowBreakBuffer(writeRowBreakBuffer, row->type, columnsMaxSize, columnCount);
@@ -69,7 +47,7 @@ int main(int argc, char* argv[])
     fprintf(txt, "%s", writeRowBuffer);
     fprintf(txt, "%s", writeRowBreakBuffer);
 
-    nextLine = fileReadLine(csv, readBuffer);
+    char* nextLine = fileReadLine(csv, readBuffer);
 
     setRowType(row, DATA);
     fillWriteRowBreakBuffer(writeRowBreakBuffer, row->type, columnsMaxSize, columnCount);
@@ -83,6 +61,75 @@ int main(int argc, char* argv[])
 
         nextLine = fileReadLine(csv, readBuffer);
     }
+}
+
+int main(int argc, char* argv[])
+{
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--test") == 0) {
+            int res = runTests();
+            if (res == 0) {
+                printf("Все тесты прошли\n");
+            }
+            return res;
+        }
+    }
+
+    FILE* csv = fopen("../data/input.csv", "r");
+
+    if (csv == NULL) {
+        printf("Не удалось открыть файл на чтение\n");
+        return CANNOT_OPEN_FILE;
+    }
+
+    char readBuffer[4096];
+    int columnCount = getColumnCountFromFile(readBuffer, csv);
+
+    if (columnCount == FILE_IS_EMPTY) {
+        printf("Файл пустой\n");
+
+        fclose(csv);
+
+        return columnCount;
+    }
+
+    int* columnsMaxSize = malloc(sizeof(int) * columnCount);
+    if (columnsMaxSize == NULL) {
+        printf("Ошибка выделения памяти\n");
+
+        fclose(csv);
+
+        return ALLOCATE_ERROR;
+    }
+
+    countMaxSizeColumnsFromFile(csv, columnsMaxSize, readBuffer);
+
+    // move pointer to start
+    fseek(csv, 0, SEEK_SET);
+
+    FILE* txt = fopen("../data/output.txt", "w");
+    if (txt == NULL) {
+        printf("Не удалось открыть файл на запись\n");
+
+        free(columnsMaxSize);
+        fclose(csv);
+        return CANNOT_OPEN_FILE;
+    }
+
+    Row* row = initRow(columnsMaxSize, columnCount, HEADER);
+    if (row == NULL) {
+        printf("Ошибка выделения памяти\n");
+
+        free(columnsMaxSize);
+        fclose(csv);
+        fclose(txt);
+        return ALLOCATE_ERROR;
+    }
+
+    char writeRowBuffer[4096];
+    char writeRowBreakBuffer[4096];
+
+    prettyWriteInFile(csv, txt, readBuffer, row, columnsMaxSize, columnCount, writeRowBuffer, writeRowBreakBuffer);
 
     destroyRow(row, columnCount);
     free(columnsMaxSize);

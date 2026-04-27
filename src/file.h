@@ -1,4 +1,5 @@
 #pragma once
 #include <stdio.h>
 
-char* fileReadLine(FILE* file, char* buff);
+// прочитать строку из файла до '\n'
+char* fileReadLine(FILE* file, char* buffer);

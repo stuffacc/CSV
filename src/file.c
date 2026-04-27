@@ -2,8 +2,8 @@
 
 char* fileReadLine(FILE* file, char* buffer)
 {
-    int res = fscanf(file, "%[^\n]\n", buffer);
-    if (res == 1) {
+    int result = fscanf(file, "%[^\n]\n", buffer);
+    if (result == 1) {
         return buffer;
     }
 

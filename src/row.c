@@ -1,11 +1,25 @@
 #include "row.h"
 
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 Row* initRow(int columnsMaxSize[], int columnCount, RowType rowType)
 {
     Row* row = malloc(sizeof(Row));
+
+    if (row == NULL) {
+        return NULL;
+    }
+
     row->type = rowType;
 
     Cell* cells = initCells(columnsMaxSize, columnCount);
+    if (cells == NULL) {
+        free(row);
+        return NULL;
+    }
 
     row->cells = cells;
 
@@ -31,6 +45,9 @@ void destroyRow(Row* row, int columnCount)
 Cell* initCells(int columnsMaxSize[], int columnCount)
 {
     Cell* cells = malloc(sizeof(Cell) * columnCount);
+    if (cells == NULL) {
+        return NULL;
+    }
 
     for (int i = 0; i < columnCount; i++) {
         Cell* currentCell = cells + i;

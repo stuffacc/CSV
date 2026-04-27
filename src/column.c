@@ -1,6 +1,12 @@
 #include "column.h"
 
-int getColumnCount(char* line)
+// получить максимум
+static int max(int value1, int value2)
+{
+    return value1 > value2 ? value1 : value2;
+}
+
+int getColumnCount(const char* line)
 {
     int columnCount = 1;
 
@@ -16,7 +22,7 @@ int getColumnCount(char* line)
     return columnCount;
 }
 
-void updateMaxSizeColums(char* line, int columnsMaxSize[])
+void updateMaxSizeColums(const char* line, int columnsMaxSize[])
 {
     char currentChar = *line;
 
@@ -39,13 +45,4 @@ void updateMaxSizeColums(char* line, int columnsMaxSize[])
     }
 
     columnsMaxSize[columnIndex] = max(columnsMaxSize[columnIndex], columnSize);
-}
-
-int max(int value1, int value2)
-{
-    if (value1 > value2) {
-        return value1;
-    }
-
-    return value2;
 }

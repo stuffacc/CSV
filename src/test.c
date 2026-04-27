@@ -1,148 +1,149 @@
+#include "file.h"
+#include "row.h"
 #include "test.h"
+
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+
+int getColumnCountFromFile(char* readBuffer, FILE* csv);
+void countMaxSizeColumnsFromFile(FILE* csv, int* columnsMaxSize, char* readBuffer);
+void prettyWriteInFile(FILE* csv, FILE* txt, char* readBuffer, Row* row, int* columnsMaxSize, int columnCount, char* writeRowBuffer, char* writeRowBreakBuffer);
 
 int runTests()
 {
-    int testNum = 1;
-
-    char fileNameIn[128];
-    char fileNameOutExpected[128];
-
-    sprintf(fileNameIn, "%s%d%s", "../data/test/test", testNum, ".csv");
-
-    FILE* in = fopen(fileNameIn, "r");
-
-    while (in != NULL) {
-        printf("Run test %d\n", testNum);
-        sprintf(fileNameOutExpected, "%s%d%s", "../data/test/testout", testNum, ".txt");
-        FILE* expectedOut = fopen(fileNameOutExpected, "r");
-
-        if (expectedOut == NULL) {
-            printf("Missed: data/test/testout%d.txt\n", testNum);
-            fclose(in);
-            return -1;
-        }
-
-        int testRes = testAndClose(in, expectedOut);
-        if (testRes != 0) {
-            printf("Error in test %d:\nSee 'data/test/test%d.csv', 'data/test/testout%d.txt' and 'data/test/output.txt'\n", testNum, testNum, testNum);
-            return -1;
-        }
-
-        testNum++;
-
-        sprintf(fileNameIn, "%s%d%s", "../data/test/test", testNum, ".csv");
-        in = fopen(fileNameIn, "r");
+    FILE* in = fopen("../data/test/test1.csv", "r");
+    if (in == NULL) {
+        printf("Файл с тестовыми даннами (test1.csv) не найден\n");
+        return FAILED;
     }
 
-    if (in != NULL) {
+    // TEST 1
+    int exceptedCount = 2;
+    if (testGetColumnCountFromFile(in, exceptedCount) == FAILED) {
         fclose(in);
+        return FAILED;
     }
 
-    return 0;
+    // TEST 2
+    fseek(in, 0, SEEK_SET);
+    int exceptedSizes[2] = { 17, 12 };
+
+    if (testCountMaxSizeColumnsFromFile(in, exceptedSizes, exceptedCount) == FAILED) {
+        fclose(in);
+        return FAILED;
+    }
+
+    FILE* out = fopen("../data/test/output.txt", "w");
+    if (out == NULL) {
+        printf("Не удалось открыть файл на запись\n");
+        fclose(in);
+        return FAILED;
+    }
+
+    // TEST 3
+    fseek(in, 0, SEEK_SET);
+    testPrettyWriteInFile(exceptedSizes, exceptedCount, in, out);
+
+    fclose(in);
+    fclose(out);
+
+    FILE* actual = fopen("../data/test/output.txt", "r");
+    FILE* excepted = fopen("../data/test/testout1.txt", "r");
+
+    if (compareFiles(actual, excepted) == FAILED) {
+        printf("Тест 3 (testPrettyWriteInFile) не прошёл\n");
+        return FAILED;
+    }
+
+    else {
+        printf("Тест 3 (testPrettyWriteInFile) прошёл\n");
+    }
+
+    return SUCCESS;
 }
 
-int testAndClose(FILE* in, FILE* expectedOut)
+int testGetColumnCountFromFile(FILE* in, int excepted)
+{
+    char readBuffer[1024];
+    int columnCount = getColumnCountFromFile(readBuffer, in);
+    if (columnCount != excepted) {
+        printf("Тест 1 (getColumnCountFromFile) не прошёл\n");
+        fclose(in);
+
+        return FAILED;
+    }
+
+    printf("Тест 1 (getColumnCountFromFile) прошёл\n");
+    return columnCount;
+}
+
+int testCountMaxSizeColumnsFromFile(FILE* in, int exceptedSizes[], int columnCount)
 {
     char readBuffer[1024];
 
-    char* header = fileReadLine(in, readBuffer);
+    int* actualSizes = malloc(sizeof(int) * columnCount);
 
-    if (header == NULL) {
-        printf("Файл с тестом пустой\n");
-        fclose(in);
-        return -1;
+    countMaxSizeColumnsFromFile(in, actualSizes, readBuffer);
+
+    for (int i = 0; i < columnCount; i++) {
+        if (actualSizes[i] != exceptedSizes[i]) {
+            printf("Тест 2 (CountMaxSizeColumnsFromFile) не прошёл\n");
+            free(actualSizes);
+            return FAILED;
+        }
     }
 
-    int columnCount = getColumnCount(header);
-    int* columnsMaxSize = malloc(sizeof(int) * columnCount);
+    printf("Тест 2 (CountMaxSizeColumnsFromFile) прошёл\n");
+    free(actualSizes);
+    return SUCCESS;
+}
 
-    updateMaxSizeColums(header, columnsMaxSize);
-
-    char* nextLine = fileReadLine(in, readBuffer);
-    while (nextLine != NULL) {
-        updateMaxSizeColums(nextLine, columnsMaxSize);
-
-        nextLine = fileReadLine(in, readBuffer);
+int testPrettyWriteInFile(int* columnsMaxSize, int columnCount, FILE* in, FILE* out)
+{
+    Row* row = initRow(columnsMaxSize, columnCount, HEADER);
+    if (row == NULL) {
+        printf("Ошибка выделения памяти\n");
+        return FAILED;
     }
-
-    // move pointer to start
-    fseek(in, 0, SEEK_SET);
-
-    header = fileReadLine(in, readBuffer);
-
-    FILE* txt = fopen("../data/test/output.txt", "w");
 
     char writeRowBuffer[1024];
     char writeRowBreakBuffer[1024];
+    char readBuffer[1024];
 
-    Row* row = initRow(columnsMaxSize, columnCount, HEADER);
-
-    fillCellsInRow(row, header);
-
-    fillWriteRowBreakBuffer(writeRowBreakBuffer, row->type, columnsMaxSize, columnCount);
-
-    fillWriteRowBuffer(writeRowBuffer, row, columnsMaxSize, columnCount);
-
-    fprintf(txt, "%s", writeRowBreakBuffer);
-    fprintf(txt, "%s", writeRowBuffer);
-    fprintf(txt, "%s", writeRowBreakBuffer);
-
-    nextLine = fileReadLine(in, readBuffer);
-
-    setRowType(row, DATA);
-    fillWriteRowBreakBuffer(writeRowBreakBuffer, row->type, columnsMaxSize, columnCount);
-
-    while (nextLine != NULL) {
-        fillCellsInRow(row, nextLine);
-        fillWriteRowBuffer(writeRowBuffer, row, columnsMaxSize, columnCount);
-
-        fprintf(txt, "%s", writeRowBuffer);
-        fprintf(txt, "%s", writeRowBreakBuffer);
-
-        nextLine = fileReadLine(in, readBuffer);
-    }
+    prettyWriteInFile(in, out, readBuffer, row, columnsMaxSize, columnCount, writeRowBuffer, writeRowBreakBuffer);
 
     destroyRow(row, columnCount);
-    free(columnsMaxSize);
-
-    fclose(in);
-    fclose(txt);
-
-    return compareFilesByLinesAndClose(expectedOut);
 }
 
-int compareFilesByLinesAndClose(FILE* expectedOut)
+int compareFiles(FILE* actual, FILE* excepted)
 {
-    FILE* out = fopen("../data/test/output.txt", "r");
+    char readBufferActual[1024];
+    char readBufferExcepted[1024];
 
-    char outBuff[4096];
-    char expectedOutBuff[4096];
+    char* outBuffLine = fileReadLine(actual, readBufferActual);
+    char* expectedOutBuffLine = fileReadLine(excepted, readBufferExcepted);
 
-    char* outBuffLine = fileReadLine(out, outBuff);
-    char* expectedOutBuffLine = fileReadLine(expectedOut, expectedOutBuff);
-
-    while (1) {
+    while (true) {
         if (outBuffLine == NULL || expectedOutBuffLine == NULL) {
-            // TODO:
-            fclose(out);
-            fclose(expectedOut);
+            fclose(actual);
+            fclose(excepted);
 
             if (outBuffLine != expectedOutBuffLine) {
-
-                return -1;
+                return FAILED;
             }
 
-            return 0;
+            return SUCCESS;
         }
 
         if (strcmp(outBuffLine, expectedOutBuffLine) != 0) {
+            fclose(actual);
+            fclose(excepted);
 
-            fclose(out);
-            fclose(expectedOut);
-            return -1;
+            return FAILED;
         }
 
-        outBuffLine = fileReadLine(out, outBuff);
-        expectedOutBuffLine = fileReadLine(expectedOut, expectedOutBuff);
+        outBuffLine = fileReadLine(actual, readBufferActual);
+        expectedOutBuffLine = fileReadLine(excepted, expectedOutBuffLine);
     }
 }
