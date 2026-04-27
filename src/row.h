@@ -39,4 +39,4 @@ void fillCellsInRow(Row* row, char* rowString);
 // заполнить буффер для записи разделения между строками (Row)
 void fillWriteRowBreakBuffer(char* writeRowBreakBuffer, RowType rowType, const int columnsMaxSize[], int columnCount);
 // заполнить буффер для записи данных из строки (Row) в файл
-void fillWriteRowBuffer(char* writeRowBuffer, Row* row, int columnsMaxSize[], const int columnCount);
+void fillWriteRowBuffer(char* writeRowBuffer, Row* row, const int columnsMaxSize[], int columnCount);
